@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>NADS</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body{
+  margin:0;
+  font-family: Arial;
+  background:#f3f4f6;
+}
+
+#splash{
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:#4f46e5;
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  font-size:22px;
+}
+
+#login{display:none;text-align:center;padding:20px;}
+#app{display:none;}
+
+.header{
+  background:#4f46e5;
+  color:white;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.icon{cursor:pointer;font-size:20px;}
+
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:15px;
+  text-align:center;
+}
+
+input{
+  width:90%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+button{
+  width:90%;
+  padding:12px;
+  margin:6px 0;
+  border:none;
+  border-radius:10px;
+  background:#4f46e5;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.card{
+  background:white;
+  padding:12px;
+  margin:10px;
+  border-radius:12px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.08);
+  text-align:right;
+}
+
+.time{
+  color:#16a34a;
+  font-size:13px;
+  margin-top:6px;
+  font-weight:bold;
+}
+
+.delete-btn{
+  background:#ef4444;
+  margin-top:10px;
+}
+
+#profileBox{
+  display:none;
+  position:fixed;
+  top:60px;
+  right:10px;
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.2);
+  width:250px;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- ⏳ تحميل -->
+<div id="splash">
+<i class="fa-solid fa-spinner fa-spin"></i><br>
+جاري التحميل...
+</div>
+
+<!-- 👤 تسجيل -->
+<div id="login">
+<h2><i class="fa-solid fa-user-plus"></i> إنشاء حساب</h2>
+
+<input id="name" placeholder="الاسم">
+<input id="age" placeholder="العمر">
+<input id="last" placeholder="اللقب">
+<input id="email" placeholder="الإيميل">
+
+<button onclick="register()">
+<i class="fa-solid fa-right-to-bracket"></i> دخول
+</button>
+</div>
+
+<!-- 📱 التطبيق -->
+<div id="app">
+
+<div class="header">
+<span onclick="toggleProfile()"><i class="fa-solid fa-user"></i></span>
+<span><i class="fa-solid fa-note-sticky"></i> Nads</span>
+<span><i class="fa-solid fa-pen-to-square"></i></span>
+</div>
+
+<div class="container">
+
+<h3> إضافة ملاحظ</h3>
+
+<input id="owner" placeholder="اسم القناة / الاسم">
+<input id="num" placeholder="رقم">
+<input id="text" placeholder="نص">
+
+<button onclick="save()">
+<i class="fa-solid fa-floppy-disk"></i> حفظ
+</button>
+
+<h3>🔍 بحث</h3>
+
+<input id="search" placeholder="ابحث بالرقم">
+
+<button onclick="find()">
+<i class="fa-solid fa-magnifying-glass"></i> بحث
+</button>
+
+<button onclick="showAll()">
+<i class="fa-solid fa-list"></i> عرض الكل
+</button>
+
+<div id="result"></div>
+
+</div>
+</div>
+
+<!-- 👤 الحساب -->
+<div id="profileBox"></div>
+
+<script>
+
+let data = JSON.parse(localStorage.getItem("notes")) || {};
+let user = JSON.parse(localStorage.getItem("user")) || null;
+
+/* ⏳ تحميل */
+setTimeout(()=>{
+  document.getElementById("splash").style.display="none";
+
+  if(user){
+    document.getElementById("app").style.display="block";
+  }else{
+    document.getElementById("login").style.display="block";
+  }
+},1500);
+
+/* ⏰ وقت */
+function getTime(){
+  return new Date().toLocaleString("ar-MA",{
+    year:"numeric",
+    month:"long",
+    day:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+/* 👤 تسجيل */
+function register(){
+  let name = document.getElementById("name").value;
+  let age = document.getElementById("age").value;
+  let last = document.getElementById("last").value;
+  let email = document.getElementById("email").value;
+
+  if(!name || !age || !last || !email){
+    alert("كمل البيانات");
+    return;
+  }
+
+  user = {name,age,last,email};
+  localStorage.setItem("user", JSON.stringify(user));
+
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+}
+
+/* 💾 حفظ */
+function save(){
+  let owner = document.getElementById("owner").value;
+  let num = document.getElementById("num").value;
+  let text = document.getElementById("text").value;
+
+  if(!owner || !num || !text){
+    alert("كمل كل البيانات");
+    return;
+  }
+
+  data[num] = {
+    owner:owner,
+    text:text,
+    time:getTime()
+  };
+
+  localStorage.setItem("notes", JSON.stringify(data));
+
+  alert("تم الحفظ ✔️");
+}
+
+/* 🔍 بحث */
+function find(){
+  let num = document.getElementById("search").value;
+  let result = document.getElementById("result");
+
+  if(data[num]){
+    result.innerHTML = `
+      <div class="card">
+        👤 ${data[num].owner}<br>
+        📌 ${num}<br>
+        📝 ${data[num].text}
+        <div class="time">🟢 ${data[num].time}</div>
+      </div>
+    `;
+  }else{
+    result.innerHTML = "❌ ما لقيت شيء";
+  }
+}
+
+/* 📋 عرض الكل + حذف */
+function showAll(){
+  let result = document.getElementById("result");
+  result.innerHTML = "";
+
+  for(let num in data){
+    result.innerHTML += `
+      <div class="card">
+        👤 ${data[num].owner}<br>
+        📌 ${num}<br>
+        📝 ${data[num].text}
+        <div class="time">🟢 ${data[num].time}</div>
+
+        <button class="delete-btn" onclick="deleteNote('${num}')">
+          🗑️ حذف
+        </button>
+      </div>
+    `;
+  }
+}
+
+/* 🗑️ حذف */
+function deleteNote(num){
+  delete data[num];
+  localStorage.setItem("notes", JSON.stringify(data));
+  showAll();
+}
+
+/* 👤 حساب */
+function toggleProfile(){
+  let box = document.getElementById("profileBox");
+
+  if(box.style.display==="block"){
+    box.style.display="none";
+  }else{
+    box.style.display="block";
+    box.innerHTML = `
+      <h3>👤 الحساب</h3>
+      <p>${user.name}</p>
+      <p>${user.age}</p>
+      <p>${user.last}</p>
+      <p>${user.email}</p>
+    `;
+  }
+}
+
+</script>
+
+</body>
+</html>
